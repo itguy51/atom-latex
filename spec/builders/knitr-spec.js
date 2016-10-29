@@ -5,17 +5,20 @@ import _ from 'lodash'
 import fs from 'fs-plus'
 import path from 'path'
 import KnitrBuilder from '../../lib/builders/knitr'
+import BuildState from '../../lib/build-state'
 
 function getRawFile (filePath) {
   return fs.readFileSync(filePath, {encoding: 'utf-8'})
 }
 
 describe('KnitrBuilder', () => {
-  let builder, fixturesPath, filePath
+  let builder, fixturesPath, filePath, state
 
   beforeEach(() => {
     waitsForPromise(() => {
-      return helpers.activatePackages()
+      return helpers.activatePackages().then(() => {
+        state = new BuildState(filePath)
+      })
     })
     builder = new KnitrBuilder()
     fixturesPath = helpers.cloneFixtures()
@@ -30,7 +33,7 @@ describe('KnitrBuilder', () => {
         `-e "knit('${filePath.replace(/\\/g, '\\\\')}')"`
       ]
 
-      const args = builder.constructArgs(filePath)
+      const args = builder.constructArgs(state, filePath)
       expect(args).toEqual(expectedArgs)
     })
   })
@@ -44,7 +47,7 @@ describe('KnitrBuilder', () => {
 
     it('successfully executes knitr when given a valid R Sweave file', () => {
       waitsForPromise(() => {
-        return builder.run(filePath).then(code => { exitCode = code })
+        return builder.run(state, filePath).then(code => { exitCode = code })
       })
 
       runs(() => {
@@ -59,7 +62,7 @@ describe('KnitrBuilder', () => {
       filePath = path.join(fixturesPath, 'foo.Rnw')
 
       waitsForPromise(() => {
-        return builder.run(filePath).then(code => { exitCode = code })
+        return builder.run(state, filePath).then(code => { exitCode = code })
       })
 
       runs(() => {
@@ -74,7 +77,7 @@ describe('KnitrBuilder', () => {
       spyOn(latex.log, 'showMessage').andCallThrough()
 
       waitsForPromise(() => {
-        return builder.run(filePath).then(code => { exitCode = code })
+        return builder.run(state, filePath).then(code => { exitCode = code })
       })
 
       runs(() => {

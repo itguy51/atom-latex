@@ -4,11 +4,12 @@ import helpers from '../spec-helpers'
 import path from 'path'
 import TexifyBuilder from '../../lib/builders/texify'
 import _ from 'lodash'
+import BuildState from '../../lib/build-state'
 
 // This should probably try to detect texify
 if (process.env.TEX_DIST === 'miktex') {
   describe('TexifyBuilder', () => {
-    let builder, fixturesPath, filePath
+    let builder, fixturesPath, filePath, state
 
     beforeEach(() => {
       waitsForPromise(() => {
@@ -17,6 +18,7 @@ if (process.env.TEX_DIST === 'miktex') {
       builder = new TexifyBuilder()
       fixturesPath = helpers.cloneFixtures()
       filePath = path.join(fixturesPath, 'file.tex')
+      state = new BuildState(filePath)
     })
 
     describe('constructArgs', () => {
@@ -29,29 +31,29 @@ if (process.env.TEX_DIST === 'miktex') {
           '--tex-option="--synctex=1"',
           `"${filePath}"`
         ]
-        const args = builder.constructArgs(filePath)
+        const args = builder.constructArgs(state, filePath)
 
         expect(args).toEqual(expectedArgs)
       })
 
       it('adds -shell-escape flag when package config value is set', () => {
         atom.config.set('latex.enableShellEscape', true)
-        expect(builder.constructArgs(filePath)).toContain('--tex-option=--enable-write18')
+        expect(builder.constructArgs(state, filePath)).toContain('--tex-option=--enable-write18')
       })
 
       it('disables synctex according to package config', () => {
         atom.config.set('latex.enableSynctex', false)
-        expect(builder.constructArgs(filePath)).not.toContain('--tex-option="--synctex=1"')
+        expect(builder.constructArgs(state, filePath)).not.toContain('--tex-option="--synctex=1"')
       })
 
       it('adds engine argument according to package config', () => {
         atom.config.set('latex.engine', 'lualatex')
-        expect(builder.constructArgs(filePath)).toContain('--engine=luatex')
+        expect(builder.constructArgs(state, filePath)).toContain('--engine=luatex')
       })
 
       it('adds a custom engine string according to package config', () => {
         atom.config.set('latex.customEngine', 'pdflatex %O %S')
-        expect(builder.constructArgs(filePath)).toContain('--engine="pdflatex %O %S"')
+        expect(builder.constructArgs(state, filePath)).toContain('--engine="pdflatex %O %S"')
       })
     })
 
@@ -60,7 +62,7 @@ if (process.env.TEX_DIST === 'miktex') {
 
       it('successfully executes texify when given a valid TeX file', () => {
         waitsForPromise(() => {
-          return builder.run(filePath).then(code => { exitCode = code })
+          return builder.run(state, filePath).then(code => { exitCode = code })
         })
 
         runs(() => {
@@ -72,7 +74,7 @@ if (process.env.TEX_DIST === 'miktex') {
         filePath = path.join(fixturesPath, 'filename with spaces.tex')
 
         waitsForPromise(() => {
-          return builder.run(filePath).then(code => { exitCode = code })
+          return builder.run(state, filePath).then(code => { exitCode = code })
         })
 
         runs(() => {
@@ -84,7 +86,7 @@ if (process.env.TEX_DIST === 'miktex') {
         filePath = path.join(fixturesPath, 'error-warning.tex')
 
         waitsForPromise(() => {
-          return builder.run(filePath).then(code => {
+          return builder.run(state, filePath).then(code => {
             exitCode = code
             parsedLog = builder.parseLogFile(filePath)
           })
@@ -126,7 +128,7 @@ if (process.env.TEX_DIST === 'miktex') {
         spyOn(builder, 'constructArgs').andReturn(['-invalid-argument'])
 
         waitsForPromise(() => {
-          return builder.run(filePath).then(code => { exitCode = code })
+          return builder.run(state, filePath).then(code => { exitCode = code })
         })
 
         runs(() => {
@@ -136,12 +138,12 @@ if (process.env.TEX_DIST === 'miktex') {
 
       it('fails to execute texify when given invalid file path', () => {
         filePath = path.join(fixturesPath, 'foo.tex')
-        const args = builder.constructArgs(filePath)
+        const args = builder.constructArgs(state, filePath)
 
         spyOn(builder, 'constructArgs').andReturn(args)
 
         waitsForPromise(() => {
-          return builder.run(filePath).then(code => { exitCode = code })
+          return builder.run(state, filePath).then(code => { exitCode = code })
         })
 
         runs(() => {

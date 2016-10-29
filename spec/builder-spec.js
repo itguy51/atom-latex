@@ -148,34 +148,4 @@ describe('Builder', () => {
       expect(result.outputFilePath).toEqual(outputFilePath)
     })
   })
-
-  describe('getOutputDirectoryFromMagic', () => {
-    it('detects output director magic and outputs directory', () => {
-      expect(builder.getOutputDirectoryFromMagic(magicOverrideFilePath)).toEqual('wibble')
-    })
-  })
-
-  describe('getOutputFormatFromMagic', () => {
-    it('detects output magic and outputs output format', () => {
-      expect(builder.getOutputFormatFromMagic(magicOverrideFilePath)).toEqual('ps')
-    })
-  })
-
-  describe('getProducerFromMagic', () => {
-    it('detects producer magic and outputs producer', () => {
-      expect(builder.getProducerFromMagic(magicOverrideFilePath)).toEqual('xdvipdfmx')
-    })
-  })
-
-  describe('getLatexEngineFromMagic', () => {
-    it('detects program magic and outputs correct engine', () => {
-      expect(builder.getLatexEngineFromMagic(magicOverrideFilePath)).toEqual('lualatex')
-    })
-  })
-
-  describe('getJobNamesFromMagic', () => {
-    it('detects jobnames magic and outputs jobnames', () => {
-      expect(builder.getJobNamesFromMagic(magicOverrideFilePath)).toEqual(['foo', 'bar'])
-    })
-  })
 })

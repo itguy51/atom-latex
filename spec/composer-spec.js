@@ -4,6 +4,7 @@ import helpers from './spec-helpers'
 import fs from 'fs-plus'
 import path from 'path'
 import werkzeug from '../lib/werkzeug'
+import BuildState from '../lib/build-state'
 
 describe('Composer', () => {
   beforeEach(() => {
@@ -17,9 +18,11 @@ describe('Composer', () => {
       editor = jasmine.createSpyObj('MockEditor', ['save', 'isModified'])
       spyOn(composer, 'resolveRootFilePath').andReturn(filePath)
       spyOn(werkzeug, 'getEditorDetails').andReturn({ editor, filePath })
+      const state = new BuildState(filePath)
+      state.jobnames = jobnames
 
-      builder = jasmine.createSpyObj('MockBuilder', ['run', 'constructArgs', 'parseLogAndFdbFiles', 'getJobNamesFromMagic', 'getOutputDirectory'])
-      builder.getJobNamesFromMagic.andReturn(jobnames)
+      builder = jasmine.createSpyObj('MockBuilder', ['run', 'constructArgs', 'parseLogAndFdbFiles', 'getOutputDirectory'])
+      spyOn(composer, 'initializeBuildState').andReturn(state)
       builder.getOutputDirectory.andReturn('')
       builder.run.andCallFake(() => {
         switch (statusCode) {
@@ -169,12 +172,14 @@ describe('Composer', () => {
     let fixturesPath
 
     function initializeSpies (filePath, jobnames = [null]) {
-      const builder = jasmine.createSpyObj('MockBuilder', ['parseFdbFile', 'getJobNamesFromMagic', 'getOutputDirectory'])
+      const builder = jasmine.createSpyObj('MockBuilder', ['parseFdbFile', 'getOutputDirectory'])
+      const state = new BuildState(filePath)
 
+      state.jobnames = jobnames
       builder.getOutputDirectory.andReturn('')
       spyOn(werkzeug, 'getEditorDetails').andReturn({ filePath })
       spyOn(composer, 'resolveRootFilePath').andReturn(filePath)
-      spyOn(composer, 'initializeBuild').andReturn({ rootFilePath: filePath, builder, jobnames })
+      spyOn(composer, 'initializeBuildState').andReturn(state)
       spyOn(composer, 'getGeneratedFileList').andCallFake((builder, rootFilePath, jobname) => {
         let { dir, name } = path.parse(rootFilePath)
         if (jobname) name = jobname
@@ -299,10 +304,12 @@ describe('Composer', () => {
       spyOn(composer, 'resolveOutputFilePath').andCallThrough()
       spyOn(latex.opener, 'open').andReturn(true)
 
-      composer.sync()
+      waitsForPromise(() => composer.sync())
 
-      expect(composer.resolveOutputFilePath).not.toHaveBeenCalled()
-      expect(latex.opener.open).not.toHaveBeenCalled()
+      runs(() => {
+        expect(composer.resolveOutputFilePath).not.toHaveBeenCalled()
+        expect(latex.opener.open).not.toHaveBeenCalled()
+      })
     })
 
     it('logs a warning and returns when an output file cannot be resolved', () => {
@@ -311,10 +318,12 @@ describe('Composer', () => {
       spyOn(latex.opener, 'open').andReturn(true)
       spyOn(latex.log, 'warning').andCallThrough()
 
-      composer.sync()
+      waitsForPromise(() => composer.sync())
 
-      expect(latex.log.warning).toHaveBeenCalled()
-      expect(latex.opener.open).not.toHaveBeenCalled()
+      runs(() => {
+        expect(latex.log.warning).toHaveBeenCalled()
+        expect(latex.opener.open).not.toHaveBeenCalled()
+      })
     })
 
     it('launches the opener using editor metadata and resolved output file', () => {
@@ -326,28 +335,32 @@ describe('Composer', () => {
 
       spyOn(latex.opener, 'open').andReturn(true)
 
-      composer.sync()
+      waitsForPromise(() => composer.sync())
 
-      expect(latex.opener.open).toHaveBeenCalledWith(outputFilePath, filePath, lineNumber)
+      runs(() => {
+        expect(latex.opener.open).toHaveBeenCalledWith(outputFilePath, filePath, lineNumber)
+      })
     })
 
     it('launches the opener using editor metadata and resolved output file with jobnames', () => {
       const filePath = 'file.tex'
       const lineNumber = 1
-      const rootFilePath = filePath
-      const builder = jasmine.createSpyObj('MockBuilder', ['run', 'constructArgs', 'parseLogAndFdbFiles', 'getJobNamesFromMagic'])
       const jobnames = ['foo', 'bar']
+      const state = new BuildState(filePath)
 
+      state.jobnames = jobnames
       spyOn(werkzeug, 'getEditorDetails').andReturn({ filePath, lineNumber })
-      spyOn(composer, 'resolveOutputFilePath').andCallFake((builder, rootFilePath, jobname) => jobname + '.pdf')
-      spyOn(composer, 'initializeBuild').andReturn({ rootFilePath, builder, jobnames })
+      spyOn(composer, 'resolveOutputFilePath').andCallFake((builder, filePath, jobname) => jobname + '.pdf')
+      spyOn(composer, 'initializeBuildState').andReturn(state)
 
       spyOn(latex.opener, 'open').andReturn(true)
 
-      composer.sync()
+      waitsForPromise(() => composer.sync())
 
-      expect(latex.opener.open).toHaveBeenCalledWith('foo.pdf', filePath, lineNumber)
-      expect(latex.opener.open).toHaveBeenCalledWith('bar.pdf', filePath, lineNumber)
+      runs(() => {
+        expect(latex.opener.open).toHaveBeenCalledWith('foo.pdf', filePath, lineNumber)
+        expect(latex.opener.open).toHaveBeenCalledWith('bar.pdf', filePath, lineNumber)
+      })
     })
   })
 })
