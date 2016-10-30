@@ -2,7 +2,7 @@
 
 import helpers from '../spec-helpers'
 import path from 'path'
-import TexifyBuilder from '../../lib/builders/texify'
+import TexifyBuilder from '../../lib/steps/texify'
 import _ from 'lodash'
 import BuildState from '../../lib/build-state'
 

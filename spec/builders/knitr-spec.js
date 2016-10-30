@@ -4,7 +4,7 @@ import helpers from '../spec-helpers'
 import _ from 'lodash'
 import fs from 'fs-plus'
 import path from 'path'
-import KnitrBuilder from '../../lib/builders/knitr'
+import KnitrBuilder from '../../lib/steps/knitr'
 import BuildState from '../../lib/build-state'
 
 function getRawFile (filePath) {
@@ -15,14 +15,15 @@ describe('KnitrBuilder', () => {
   let builder, fixturesPath, filePath, state
 
   beforeEach(() => {
+    builder = new KnitrBuilder()
+    fixturesPath = helpers.cloneFixtures()
+    filePath = path.join(fixturesPath, 'knitr', 'file.Rnw')
+
     waitsForPromise(() => {
       return helpers.activatePackages().then(() => {
         state = new BuildState(filePath)
       })
     })
-    builder = new KnitrBuilder()
-    fixturesPath = helpers.cloneFixtures()
-    filePath = path.join(fixturesPath, 'knitr', 'file.Rnw')
   })
 
   describe('constructArgs', () => {

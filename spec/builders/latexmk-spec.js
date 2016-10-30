@@ -2,7 +2,7 @@
 
 import helpers from '../spec-helpers'
 import path from 'path'
-import LatexmkBuilder from '../../lib/builders/latexmk'
+import LatexmkBuilder from '../../lib/steps/latexmk'
 import _ from 'lodash'
 import BuildState from '../../lib/build-state'
 
