@@ -38,7 +38,8 @@ describe('LatexmkBuilder', () => {
     })
 
     it('adds -g flag when rebuild is passed', () => {
-      expect(builder.constructArgs(state, filePath, null, true)).toContain('-g')
+      state.shouldRebuild = true
+      expect(builder.constructArgs(state, filePath, null)).toContain('-g')
     })
 
     it('adds -shell-escape flag when package config value is set', () => {
@@ -130,7 +131,7 @@ describe('LatexmkBuilder', () => {
 
     it('successfully executes latexmk when given a valid TeX file', () => {
       waitsForPromise(() => {
-        return builder.run(state, filePath).then(code => { exitCode = code })
+        return builder.run(state).then(code => { exitCode = code })
       })
 
       runs(() => {
@@ -142,7 +143,7 @@ describe('LatexmkBuilder', () => {
       filePath = path.join(fixturesPath, 'filename with spaces.tex')
 
       waitsForPromise(() => {
-        return builder.run(state, filePath).then(code => { exitCode = code })
+        return builder.run(state).then(code => { exitCode = code })
       })
 
       runs(() => {
@@ -152,10 +153,11 @@ describe('LatexmkBuilder', () => {
 
     it('fails with code 12 and various errors, warnings and info messages are produced in log file', () => {
       filePath = path.join(fixturesPath, 'error-warning.tex')
+      state = new BuildState(filePath)
       const subFilePath = path.join(fixturesPath, 'sub', 'wibble.tex')
 
       waitsForPromise(() => {
-        return builder.run(state, filePath).then(code => {
+        return builder.run(state).then(code => {
           exitCode = code
           parsedLog = builder.parseLogFile(filePath)
         })
@@ -201,7 +203,7 @@ describe('LatexmkBuilder', () => {
       spyOn(builder, 'constructArgs').andReturn(['-invalid-argument'])
 
       waitsForPromise(() => {
-        return builder.run(state, filePath).then(code => { exitCode = code })
+        return builder.run(state).then(code => { exitCode = code })
       })
 
       runs(() => {
@@ -220,7 +222,7 @@ describe('LatexmkBuilder', () => {
       spyOn(builder, 'constructArgs').andReturn(args)
 
       waitsForPromise(() => {
-        return builder.run(state, filePath).then(code => { exitCode = code })
+        return builder.run(state).then(code => { exitCode = code })
       })
 
       runs(() => {

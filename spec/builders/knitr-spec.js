@@ -47,7 +47,7 @@ describe('KnitrBuilder', () => {
 
     it('successfully executes knitr when given a valid R Sweave file', () => {
       waitsForPromise(() => {
-        return builder.run(state, filePath).then(code => { exitCode = code })
+        return builder.run(state).then(code => { exitCode = code })
       })
 
       runs(() => {
@@ -60,9 +60,10 @@ describe('KnitrBuilder', () => {
 
     it('fails to execute knitr when given an invalid file path', () => {
       filePath = path.join(fixturesPath, 'foo.Rnw')
+      state = new BuildState(filePath)
 
       waitsForPromise(() => {
-        return builder.run(state, filePath).then(code => { exitCode = code })
+        return builder.run(state).then(code => { exitCode = code })
       })
 
       runs(() => {
@@ -77,7 +78,7 @@ describe('KnitrBuilder', () => {
       spyOn(latex.log, 'showMessage').andCallThrough()
 
       waitsForPromise(() => {
-        return builder.run(state, filePath).then(code => { exitCode = code })
+        return builder.run(state).then(code => { exitCode = code })
       })
 
       runs(() => {

@@ -62,7 +62,7 @@ if (process.env.TEX_DIST === 'miktex') {
 
       it('successfully executes texify when given a valid TeX file', () => {
         waitsForPromise(() => {
-          return builder.run(state, filePath).then(code => { exitCode = code })
+          return builder.run(state).then(code => { exitCode = code })
         })
 
         runs(() => {
@@ -74,7 +74,7 @@ if (process.env.TEX_DIST === 'miktex') {
         filePath = path.join(fixturesPath, 'filename with spaces.tex')
 
         waitsForPromise(() => {
-          return builder.run(state, filePath).then(code => { exitCode = code })
+          return builder.run(state).then(code => { exitCode = code })
         })
 
         runs(() => {
@@ -86,7 +86,7 @@ if (process.env.TEX_DIST === 'miktex') {
         filePath = path.join(fixturesPath, 'error-warning.tex')
 
         waitsForPromise(() => {
-          return builder.run(state, filePath).then(code => {
+          return builder.run(state).then(code => {
             exitCode = code
             parsedLog = builder.parseLogFile(filePath)
           })
@@ -128,7 +128,7 @@ if (process.env.TEX_DIST === 'miktex') {
         spyOn(builder, 'constructArgs').andReturn(['-invalid-argument'])
 
         waitsForPromise(() => {
-          return builder.run(state, filePath).then(code => { exitCode = code })
+          return builder.run(state).then(code => { exitCode = code })
         })
 
         runs(() => {
@@ -143,7 +143,7 @@ if (process.env.TEX_DIST === 'miktex') {
         spyOn(builder, 'constructArgs').andReturn(args)
 
         waitsForPromise(() => {
-          return builder.run(state, filePath).then(code => { exitCode = code })
+          return builder.run(state).then(code => { exitCode = code })
         })
 
         runs(() => {
